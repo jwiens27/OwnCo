@@ -11,13 +11,13 @@ export type RentedOutOccupancy = {
 
 export type OwnerOccupiedOccupancy = {
   type: "owner_occupied";
-  liveInOwnerIndices: number[];
+  liveInOwnerIndices: readonly number[];
   fairMarketRent: number;
 };
 
 export type MixedOccupancy = {
   type: "mixed";
-  liveInOwnerIndices: number[];
+  liveInOwnerIndices: readonly number[];
   fairMarketRent: number;
   externalMonthlyRent: number;
 };
