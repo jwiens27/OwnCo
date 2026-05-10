@@ -1,6 +1,7 @@
 import type { Scenario, OwnerResult } from "./types";
-import { monthlyPayment, balanceAtMonth } from "./mortgage";
+import { monthlyPayment } from "./mortgage";
 import { computeImputedRent } from "./imputedRent";
+import { projectEquity } from "./equity";
 
 export function computeOwnershipShares(scenario: Scenario): number[] {
   const total = scenario.owners.reduce((sum, o) => sum + o.downPayment, 0);
@@ -83,9 +84,9 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
       monthlyImputedRentReceived +
       monthlyImputedRentPaid;
 
-    const equityAtYear5 = computeEquityAt(scenario, share, principal, 60);
-    const equityAtYear10 = computeEquityAt(scenario, share, principal, 120);
-    const equityAtYear30 = computeEquityAt(scenario, share, principal, 360);
+    const equityAtYear5 = projectEquity(scenario, 60).perOwner[i].equity;
+    const equityAtYear10 = projectEquity(scenario, 120).perOwner[i].equity;
+    const equityAtYear30 = projectEquity(scenario, 360).perOwner[i].equity;
 
     return {
       ownerIndex: i,
@@ -110,20 +111,3 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
   });
 }
 
-function computeEquityAt(
-  scenario: Scenario,
-  share: number,
-  principal: number,
-  monthsElapsed: number,
-): number {
-  const yearsElapsed = monthsElapsed / 12;
-  const futureValue =
-    scenario.purchasePrice * Math.pow(1 + scenario.expectedAppreciationPct, yearsElapsed);
-  const remainingLoan = balanceAtMonth(
-    principal,
-    scenario.mortgageRate,
-    scenario.mortgageTermYears,
-    monthsElapsed,
-  );
-  return (futureValue - remainingLoan) * share;
-}
