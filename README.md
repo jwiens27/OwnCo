@@ -34,3 +34,22 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Development on Windows
+
+This project must be cloned to a path on the **C: drive** when developing on Windows. Next.js has a tracked issue ([vercel/next.js#45067](https://github.com/vercel/next.js/issues/45067)) where `next build` fails with `EISDIR: illegal operation on a directory, readlink` when the project is on any other drive (D:, E:, etc.), regardless of Node.js version or filesystem format.
+
+Recommended location: `C:\dev\Roundtable` or `C:\bin\Roundtable`.
+
+If you must develop from another drive, use WSL2 — the Linux filesystem layer is not affected by this issue.
+
+### Required Node.js version
+
+Node.js 20 LTS. Use `nvm-windows` to manage versions:
+
+```powershell
+nvm install 20
+nvm use 20
+```
+
+Node.js 24 is not LTS and has not been validated against this stack.
