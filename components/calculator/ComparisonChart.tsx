@@ -1,0 +1,49 @@
+"use client";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import type { Comparison, OwnerResult } from "@/lib/calculator/types";
+import { formatCurrency } from "@/lib/utils/format";
+
+export function ComparisonChart({
+  comparisons,
+  ownerResults,
+}: {
+  comparisons: Comparison[];
+  ownerResults: OwnerResult[];
+}) {
+  const data = comparisons.map((cmp, i) => ({
+    name: ownerResults[i]?.name ?? `Owner ${i + 1}`,
+    "Co-Buy": Math.round(cmp.coBuy.monthlyCost),
+    "Keep Renting": Math.round(cmp.keepRenting.monthlyCost),
+    "Buy Solo": cmp.buySolo.feasible && cmp.buySolo.monthlyCost != null
+      ? Math.round(cmp.buySolo.monthlyCost)
+      : null,
+  }));
+
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <p className="mb-4 text-sm font-semibold">Monthly Cost Comparison</p>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+          <YAxis tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} width={48} />
+          <Tooltip formatter={(v: number) => formatCurrency(v)} />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Bar dataKey="Co-Buy" fill="#6366f1" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Keep Renting" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Buy Solo" fill="#10b981" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
