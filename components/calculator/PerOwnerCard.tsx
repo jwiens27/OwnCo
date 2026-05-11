@@ -5,7 +5,7 @@ import type { OwnerResult } from "@/lib/calculator/types";
 import { formatCurrency, formatPercent } from "@/lib/utils/format";
 
 export function PerOwnerCard({ result }: { result: OwnerResult }) {
-  const netGainLoss = result.monthlySavingsVsRenting + result.monthlyEquityGainShare;
+  const netGainLoss = result.monthlyEquityGainShare - result.netMonthlyCost;
   const netPositive = netGainLoss >= 0;
 
   return (
@@ -22,14 +22,7 @@ export function PerOwnerCard({ result }: { result: OwnerResult }) {
           <span className="font-medium">{formatCurrency(result.netMonthlyCost)}/mo</span>
         </div>
 
-        <div className="mt-1 border-t pt-2 grid grid-cols-3 gap-1 text-xs">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">vs. alt. housing</span>
-            <span className="font-medium">
-              {result.monthlySavingsVsRenting >= 0 ? "+" : ""}
-              {formatCurrency(result.monthlySavingsVsRenting)}/mo
-            </span>
-          </div>
+        <div className="mt-1 border-t pt-2 grid grid-cols-2 gap-1 text-xs">
           <div className="flex flex-col gap-0.5">
             <span className="text-muted-foreground">equity gain</span>
             <span className="font-medium">+{formatCurrency(result.monthlyEquityGainShare)}/mo</span>
