@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +16,21 @@ import type { Occupancy } from "@/lib/calculator/types";
 export function OccupancyInputs() {
   const { scenario, updateScenario } = useCalculatorStore();
   const { occupancy, owners } = scenario;
+
+  const rentedOutValue = occupancy.type === "rented_out" ? occupancy.expectedMonthlyRent : 0;
+  const fmrValue = (occupancy.type === "owner_occupied" || occupancy.type === "mixed") ? occupancy.fairMarketRent : 0;
+  const externalRentValue = occupancy.type === "mixed" ? occupancy.externalMonthlyRent : 0;
+
+  const [rawRentedOut, setRawRentedOut] = useState(String(rentedOutValue));
+  const [rawFmr, setRawFmr] = useState(String(fmrValue));
+  const [rawExternal, setRawExternal] = useState(String(externalRentValue));
+  const rentedOutFocused = useRef(false);
+  const fmrFocused = useRef(false);
+  const externalFocused = useRef(false);
+
+  useEffect(() => { if (!rentedOutFocused.current) setRawRentedOut(String(rentedOutValue)); }, [rentedOutValue]);
+  useEffect(() => { if (!fmrFocused.current) setRawFmr(String(fmrValue)); }, [fmrValue]);
+  useEffect(() => { if (!externalFocused.current) setRawExternal(String(externalRentValue)); }, [externalRentValue]);
 
   function handleTypeChange(type: string | null) {
     if (!type) return;
@@ -75,16 +91,18 @@ export function OccupancyInputs() {
           <div className="flex items-center gap-1">
             <span className="text-sm text-muted-foreground">$</span>
             <Input
-              type="number"
-              min={0}
-              step={50}
-              value={occupancy.expectedMonthlyRent}
+              type="text"
+              inputMode="decimal"
+              value={rawRentedOut}
+              onFocus={() => { rentedOutFocused.current = true; }}
+              onBlur={() => {
+                rentedOutFocused.current = false;
+                if (isNaN(parseFloat(rawRentedOut))) setRawRentedOut(String(rentedOutValue));
+              }}
               onChange={(e) => {
+                setRawRentedOut(e.target.value);
                 const v = parseFloat(e.target.value);
-                if (!isNaN(v))
-                  updateScenario({
-                    occupancy: { ...occupancy, expectedMonthlyRent: v },
-                  });
+                if (!isNaN(v)) updateScenario({ occupancy: { ...occupancy, expectedMonthlyRent: v } });
               }}
               className="min-h-[44px]"
             />
@@ -99,14 +117,18 @@ export function OccupancyInputs() {
             <div className="flex items-center gap-1">
               <span className="text-sm text-muted-foreground">$</span>
               <Input
-                type="number"
-                min={0}
-                step={50}
-                value={occupancy.fairMarketRent}
+                type="text"
+                inputMode="decimal"
+                value={rawFmr}
+                onFocus={() => { fmrFocused.current = true; }}
+                onBlur={() => {
+                  fmrFocused.current = false;
+                  if (isNaN(parseFloat(rawFmr))) setRawFmr(String(fmrValue));
+                }}
                 onChange={(e) => {
+                  setRawFmr(e.target.value);
                   const v = parseFloat(e.target.value);
-                  if (!isNaN(v))
-                    updateScenario({ occupancy: { ...occupancy, fairMarketRent: v } });
+                  if (!isNaN(v)) updateScenario({ occupancy: { ...occupancy, fairMarketRent: v } });
                 }}
                 className="min-h-[44px]"
               />
@@ -119,16 +141,18 @@ export function OccupancyInputs() {
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted-foreground">$</span>
                 <Input
-                  type="number"
-                  min={0}
-                  step={50}
-                  value={occupancy.externalMonthlyRent}
+                  type="text"
+                  inputMode="decimal"
+                  value={rawExternal}
+                  onFocus={() => { externalFocused.current = true; }}
+                  onBlur={() => {
+                    externalFocused.current = false;
+                    if (isNaN(parseFloat(rawExternal))) setRawExternal(String(externalRentValue));
+                  }}
                   onChange={(e) => {
+                    setRawExternal(e.target.value);
                     const v = parseFloat(e.target.value);
-                    if (!isNaN(v))
-                      updateScenario({
-                        occupancy: { ...occupancy, externalMonthlyRent: v },
-                      });
+                    if (!isNaN(v)) updateScenario({ occupancy: { ...occupancy, externalMonthlyRent: v } });
                   }}
                   className="min-h-[44px]"
                 />
