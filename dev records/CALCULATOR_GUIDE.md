@@ -106,7 +106,7 @@ loanPrincipal = Math.max(0, purchasePrice - sum(owner.downPayment))
 
 ### Owners section (`OwnerInputs.tsx`)
 
-Each owner has three fields. The calculator supports 2–6 owners.
+Each owner has two fields. The calculator supports 2–6 owners.
 
 **Name** (`owner.name: string`)
 Display only — appears on cards, chart labels, and the imputed rent callout. Does not affect any calculation.
@@ -122,9 +122,7 @@ If all owners enter $0 as their down payment, the calculator falls back to equal
 - Validation: must be ≥ 0; sum of all down payments must not exceed purchase price
 - 5% of purchase price minimum required to be eligible for solo-buy comparison
 
-**Current monthly rent** (`owner.currentMonthlyRent: number`)
-What this owner currently pays in rent, in dollars per month. This is used only for the "savings vs. renting" calculation and the Comparison Chart — it has no effect on the co-buy cost math.
-- Used in: `monthlySavingsVsRenting = currentMonthlyRent - netMonthlyCost`
+> **Note:** The `Owner` type retains a `currentMonthlyRent` field for potential future use, but it is not exposed in the UI and is initialized to `0` for all owners.
 
 ---
 
@@ -350,22 +348,58 @@ This is the core business insight the calculator surfaces: when one person lives
 
 ---
 
-### Step 8 — Savings vs. renting
+### Step 8 — Monthly equity gain
 
-Simple subtraction:
+The property builds equity two ways each month: principal paydown and appreciation. The calculator combines both into a single figure (`lib/calculator/compute.ts`):
 
 ```typescript
-monthlySavingsVsRenting = owner.currentMonthlyRent - netMonthlyCost
+monthlyInterest    = loanPrincipal × (mortgageRate / 12)
+monthlyPrincipal   = monthlyMortgagePayment − monthlyInterest
+monthlyAppreciation = purchasePrice × expectedAppreciationPct / 12
+
+monthlyEquityGain  = monthlyPrincipal + monthlyAppreciation
 ```
 
-Positive means co-buying is cheaper than what they currently pay in rent. Negative means it costs more.
+This is the total equity the group gains in month 1. Per-owner share (`lib/calculator/perOwner.ts`):
 
-**Headline savings number** (top of results panel):  
-Sum of `Math.max(0, monthlySavingsVsRenting)` across all owners. Owners who pay more in the co-buy than their current rent are not subtracted from the headline — they are ignored. This is intentional: the headline shows the total benefit, not the net benefit.
+```typescript
+monthlyEquityGainShare[i] = monthlyEquityGain × ownershipShare[i]
+```
+
+**Example (default scenario):**
+- Monthly interest: $590,000 × 0.07/12 = $3,442
+- Monthly principal: $3,925 − $3,442 = **$483**
+- Monthly appreciation: $750,000 × 0.03/12 = **$1,875**
+- Monthly equity gain: $483 + $1,875 = **~$2,358**
+- Per-owner share (25%): **~$590**
 
 ---
 
-### Step 9 — Equity projection
+### Step 8b — Monthly Summary (the headline output)
+
+The top of the results panel shows three combined figures:
+
+```typescript
+// Monthly Payment: net cash flow of the property itself
+monthlyPayment = sum(monthlyRentalIncomeShare) − totalMonthlyCarryingCost
+
+// Monthly equity gain: as computed above (total, all owners)
+monthlyEquityGain
+
+// Net gain / loss: the sum of the two above
+netGainLoss = monthlyPayment + monthlyEquityGain
+```
+
+`monthlyPayment` is negative when owners are paying out of pocket (costs exceed rental income) and positive when the property generates net income. The net gain / loss is the only figure shown in green or red.
+
+**Example (default — all 4 live in, no external rental income):**
+- Monthly Payment: $0 − $5,450 = **−$5,450**
+- Monthly equity gain: **+$2,358**
+- Net gain / loss: −$5,450 + $2,358 = **−$3,092**
+
+---
+
+### Step 9 — Equity projection and net gain at year N
 
 `lib/calculator/equity.ts`:
 
@@ -376,18 +410,28 @@ totalEquity    = futureValue − remainingLoan
 perOwnerEquity = totalEquity × ownershipShare
 ```
 
-The equity shown on the per-owner cards (Yr 5 / Yr 10 / Yr 30) and the equity line chart both use this formula. Note that equity at Year 0 is not zero — it equals the total down payment (current value minus loan equals the cash already put in).
+Note that equity at Year 0 is not zero — it equals the total down payment.
+
+The per-owner cards show **net gain**, not raw equity. Net gain subtracts all cash the owner has invested:
+
+```typescript
+netGainAtYearN = equityAtYearN − downPayment − (netMonthlyCost × months)
+```
 
 **Example — default scenario, Year 5:**
 - Future value: $750,000 × (1.03)^5 = $869,450
 - Remaining loan at month 60: ≈$555,400
 - Total equity: ≈$314,050
-- Per owner (25%): ≈**$78,500**
+- Per-owner equity (25%): ≈$78,500
+- Net gain: $78,500 − $40,000 − ($2,238 × 60) ≈ **−$95,800**
 
 **Year 30:**
 - Future value: $750,000 × (1.03)^30 = $1,820,490
-- Remaining loan: ≈$0 (paid off)
-- Per owner: ≈**$455,000**
+- Remaining loan: ≈$0
+- Per-owner equity: ≈$455,000
+- Net gain: $455,000 − $40,000 − ($2,238 × 360) ≈ **−$390,600**
+
+The negative net gain in the default all-live-in scenario reflects that `netMonthlyCost` includes imputed rent — owners are "paying" for housing consumption each month. See the Q&A section for more on this.
 
 ---
 
@@ -416,15 +460,17 @@ Note: the solo buyer pays the full carrying costs alone — no splitting. This n
 
 ## Output fields
 
-### Headline — "Combined monthly savings vs. renting"
+### Monthly Summary card (`ResultsPanel.tsx`)
 
-Displayed at the top of the results panel. Formula:
+Displayed at the top of the results panel. Three columns:
 
-```typescript
-sum(Math.max(0, owner.monthlySavingsVsRenting) for each owner)
-```
+| Label | Formula |
+|---|---|
+| Monthly Payment | `sum(monthlyRentalIncomeShare) − totalMonthlyCarryingCost` |
+| Monthly equity gain | `monthlyPrincipalPaydown + monthlyAppreciation` (total, all owners) |
+| Net gain / loss | `monthlyPayment + monthlyEquityGain` — shown in green (positive) or red (negative) |
 
-Owners who pay more than their current rent are floored at $0 contribution to this number.
+Monthly Payment is negative when owners are net paying out of pocket, positive when rental income exceeds costs.
 
 ---
 
@@ -434,8 +480,9 @@ Owners who pay more than their current rent are floored at $0 contribution to th
 |---|---|---|
 | Ownership % | `ownershipShare` | `downPayment / totalDownPayment` |
 | Net monthly cost | `netMonthlyCost` | gross − rental income − imputed received + imputed paid |
-| vs. renting | `monthlySavingsVsRenting` | `currentMonthlyRent − netMonthlyCost` |
-| Yr 5 / Yr 10 / Yr 30 | `equityAtYear5/10/30` | `(appreciatedValue − remainingLoan) × share` |
+| Equity gain | `monthlyEquityGainShare` | `monthlyEquityGain × ownershipShare` |
+| Net gain/loss | computed | `monthlyEquityGainShare − netMonthlyCost` — green/red |
+| 5Y / 10Y / 30Y net gain | `netGainAtYear5/10/30` | `equityAtYearN − downPayment − (netMonthlyCost × months)` |
 
 ---
 
@@ -456,8 +503,8 @@ Three bars per owner:
 | Bar | Value | Source |
 |---|---|---|
 | Co-Buy | `netMonthlyCost` | from `OwnerResult` |
-| Keep Renting | `currentMonthlyRent` | raw input, no calculation |
-| Buy Solo | `soloMonthlyCost` | or "N/A" if down payment < 5% |
+| Alt. Housing | `currentMonthlyRent` | raw input (currently $0 for all owners) |
+| Solo (owner-occ.) | `soloMonthlyCost` | or "N/A" if down payment < 5% |
 
 **Why the scale shifts when you change mortgage term:** All three bars are on the same Y axis. If the co-buy monthly cost rises (e.g., shorter term), the axis auto-scales to fit. This is correct — the chart isn't broken, the cost genuinely went up.
 
@@ -581,7 +628,7 @@ Run the app with `pnpm dev` and navigate to `http://localhost:3000/calculator`. 
 - Purchase price: $750,000
 - Tax: $9,000/yr, Insurance: $1,800/yr, HOA: $0, Maintenance: 1%
 - Rate: 7%, Term: 30 years
-- 4 owners, each $40,000 down, each $2,500/month current rent
+- 4 owners, each $40,000 down
 - Occupancy: owner-occupied, all 4 live in, FMR: $3,500
 - Appreciation: 3%
 
@@ -598,14 +645,19 @@ Run the app with `pnpm dev` and navigate to `http://localhost:3000/calculator`. 
 | Each owner's ownership share | 25.00% |
 | Each owner's gross monthly cost | ~$1,362 |
 | Imputed rent paid per live-in owner | $875 (= $3,500 / 4) |
-| Each owner's net monthly cost | ~$2,237 |
-| Each owner's savings vs. renting | ~$263/mo |
-| Headline combined savings | ~$1,050/mo |
-| Per-owner equity, Year 5 | ~$78,500 |
-| Per-owner equity, Year 10 | ~$125,400 |
-| Per-owner equity, Year 30 | ~$455,000 |
+| Each owner's net monthly cost | ~$2,238 |
+| **Monthly Summary — Monthly Payment** | **~−$5,450** (no rental income; full carrying cost out of pocket) |
+| **Monthly Summary — Monthly equity gain** | **~+$2,358** ($483 principal + $1,875 appreciation) |
+| **Monthly Summary — Net gain / loss** | **~−$3,092** |
+| Per-owner equity gain share | ~$590/mo |
+| Per-owner net gain/loss | ~−$1,648/mo |
+| Per-owner net gain, Year 5 | ~−$95,800 |
+| Per-owner net gain, Year 10 | ~−$183,200 |
+| Per-owner net gain, Year 30 | ~−$390,600 |
 
-**What to check:** The headline savings number, the net monthly cost on any owner card, and the equity values at Year 5.
+*The negative net gain figures are expected in this all-live-in scenario — see the Q&A entry on imputed rent.*
+
+**What to check:** The Monthly Summary card values, the net monthly cost on any owner card, and the net gain at Year 5.
 
 ---
 
@@ -620,12 +672,14 @@ Run the app with `pnpm dev` and navigate to `http://localhost:3000/calculator`. 
 | Monthly mortgage payment | ~$3,925 | ~$5,303 | ↑ Higher |
 | Total carrying cost | ~$5,450 | ~$6,828 | ↑ Higher |
 | Each owner's gross monthly cost | ~$1,362 | ~$1,707 | ↑ Higher |
-| Each owner's net monthly cost | ~$2,237 | ~$2,582 | ↑ Higher |
-| Headline savings | ~$1,050 | ~−$330 | Goes negative |
-| Per-owner equity, Year 5 | ~$78,500 | ~$174,000 | ↑ Much higher |
-| Per-owner equity, Year 10 | ~$125,400 | ~$304,000 | ↑ Much higher |
+| Each owner's net monthly cost | ~$2,238 | ~$2,582 | ↑ Higher |
+| Monthly Payment (summary) | ~−$5,450 | ~−$6,828 | ↑ More negative |
+| Monthly equity gain (summary) | ~+$2,358 | ~+$3,736 | ↑ Higher (more principal paid) |
+| Net gain / loss (summary) | ~−$3,092 | ~−$3,092 | Similar (higher cost offset by more equity) |
+| Per-owner net gain, Year 5 | ~−$95,800 | ~−$24,000 | ↑ Less negative |
+| Per-owner net gain, Year 10 | ~−$183,200 | ~+$56,000 | Turns positive |
 
-**Key check:** Monthly costs go UP, equity goes UP faster. Both directions are correct. The headline savings may go negative — this means co-buying is more expensive per month than renting at the 15-year term, which is expected for most scenarios.
+**Key check:** Monthly costs go UP, equity builds UP faster. The monthly net gain/loss stays roughly similar because the extra cost is offset by extra equity gain. Longer-horizon net gains improve significantly on the 15-year term.
 
 ---
 
@@ -712,7 +766,7 @@ Purchase price: $750,000.
 **Expected change:**
 - Each owner's gross monthly cost increases by $500 × 25% = **$125/month**
 - Net monthly cost increases by the same $125
-- Headline savings decreases by $500 (4 owners × $125)
+- Monthly Payment in the Monthly Summary becomes more negative by $500 (4 owners × $125)
 
 **Key check:** The HOA field should have a direct, linear, proportional impact. If adding $500 HOA doesn't increase each owner's net cost by exactly $125 (on equal shares), something is wrong.
 
@@ -749,8 +803,8 @@ A: Recharts auto-scales the Y axis to fit the data. If costs went up, the axis g
 **Q: When all 4 owners live in, each owner's net monthly cost includes imputed rent they're "paying" but nobody is "receiving."**  
 A: This is intentional. When all owners live in, imputed rent represents the housing consumption value each owner is getting — the opportunity cost of living there rather than renting it out. The money is paid by each owner to the partnership notionally. There are no non-live-in owners to receive it, so it adds to cost without a corresponding credit. This is a design decision worth reconsidering if you want the all-live-in case to show pure carrying cost only.
 
-**Q: The headline savings number didn't go negative even though some owners are paying more than their rent.**  
-A: The headline uses `Math.max(0, savings)` per owner — owners who pay more than their rent don't subtract from the headline. The individual owner cards do show negative savings (displayed in red). This is a product decision: the headline shows aggregate benefit, not net benefit.
+**Q: The net gain at Year 5, 10, and 30 on the owner cards are all deeply negative in the default scenario.**  
+A: Expected. The default scenario has all 4 owners living in, which means each pays imputed rent ($875/month on top of their gross cost). `netMonthlyCost` includes this imputed rent, so the cumulative cash invested after 5 years is ~$134k per owner — exceeding the ~$78k equity built. Net gain turns positive only when equity appreciation outpaces total cash invested. For a pure investment scenario (rented out), the numbers improve dramatically because there is no imputed rent cost.
 
 **Q: Equity at Year 0 is not zero.**  
 A: Correct. At month 0, the remaining loan equals the loan principal, but the property value equals the purchase price. Total equity = purchase price − loan = total down payment. If 4 owners put in $40k each, they each start with $40k equity (their own down payment, by definition).
