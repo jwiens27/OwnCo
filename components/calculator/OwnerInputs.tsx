@@ -17,21 +17,15 @@ function OwnerRow({
   owner: Owner;
   index: number;
   canRemove: boolean;
-  onUpdate: (field: "name" | "downPayment" | "currentMonthlyRent", value: string | number) => void;
+  onUpdate: (field: "name" | "downPayment", value: string | number) => void;
   onRemove: () => void;
 }) {
   const [rawDown, setRawDown] = useState(String(owner.downPayment));
-  const [rawRent, setRawRent] = useState(String(owner.currentMonthlyRent));
   const downFocused = useRef(false);
-  const rentFocused = useRef(false);
 
   useEffect(() => {
     if (!downFocused.current) setRawDown(String(owner.downPayment));
   }, [owner.downPayment]);
-
-  useEffect(() => {
-    if (!rentFocused.current) setRawRent(String(owner.currentMonthlyRent));
-  }, [owner.currentMonthlyRent]);
 
   return (
     <div className="rounded-md border p-3 flex flex-col gap-3">
@@ -52,50 +46,26 @@ function OwnerRow({
           ✕
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs text-muted-foreground">Down Payment</Label>
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-muted-foreground">$</span>
-            <Input
-              type="text"
-              inputMode="decimal"
-              value={rawDown}
-              onFocus={() => { downFocused.current = true; }}
-              onBlur={() => {
-                downFocused.current = false;
-                if (isNaN(parseFloat(rawDown))) setRawDown(String(owner.downPayment));
-              }}
-              onChange={(e) => {
-                setRawDown(e.target.value);
-                const v = parseFloat(e.target.value);
-                if (!isNaN(v)) onUpdate("downPayment", v);
-              }}
-              className="min-h-[44px]"
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs text-muted-foreground">Alt. Housing Cost</Label>
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-muted-foreground">$</span>
-            <Input
-              type="text"
-              inputMode="decimal"
-              value={rawRent}
-              onFocus={() => { rentFocused.current = true; }}
-              onBlur={() => {
-                rentFocused.current = false;
-                if (isNaN(parseFloat(rawRent))) setRawRent(String(owner.currentMonthlyRent));
-              }}
-              onChange={(e) => {
-                setRawRent(e.target.value);
-                const v = parseFloat(e.target.value);
-                if (!isNaN(v)) onUpdate("currentMonthlyRent", v);
-              }}
-              className="min-h-[44px]"
-            />
-          </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">Down Payment</Label>
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-muted-foreground">$</span>
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={rawDown}
+            onFocus={() => { downFocused.current = true; }}
+            onBlur={() => {
+              downFocused.current = false;
+              if (isNaN(parseFloat(rawDown))) setRawDown(String(owner.downPayment));
+            }}
+            onChange={(e) => {
+              setRawDown(e.target.value);
+              const v = parseFloat(e.target.value);
+              if (!isNaN(v)) onUpdate("downPayment", v);
+            }}
+            className="min-h-[44px]"
+          />
         </div>
       </div>
     </div>
@@ -129,7 +99,7 @@ export function OwnerInputs() {
     updateScenario({ owners: newOwners, occupancy: newOccupancy });
   }
 
-  function updateOwner(i: number, field: "name" | "downPayment" | "currentMonthlyRent", value: string | number) {
+  function updateOwner(i: number, field: "name" | "downPayment", value: string | number) {
     const newOwners = owners.map((o, idx) =>
       idx === i ? { ...o, [field]: value } : o,
     );
