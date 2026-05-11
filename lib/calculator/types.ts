@@ -58,11 +58,15 @@ export type OwnerResult = {
   monthlyImputedRentReceived: number;
   grossMonthlyCost: number;
   netMonthlyCost: number;
+  monthlyEquityGainShare: number;
   currentMonthlyRent: number;
   monthlySavingsVsRenting: number;
   equityAtYear5: number;
   equityAtYear10: number;
   equityAtYear30: number;
+  netGainAtYear5: number;
+  netGainAtYear10: number;
+  netGainAtYear30: number;
 };
 
 export type ImputedRentBreakdown = {
@@ -82,6 +86,7 @@ export type Comparison = {
 export type Results = {
   totalMonthlyMortgage: number;
   totalMonthlyCarryingCost: number;
+  monthlyEquityGain: number;
   ownerResults: OwnerResult[];
   imputedRent: ImputedRentBreakdown | null;
   comparisons: Comparison[];

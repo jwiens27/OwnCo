@@ -1,7 +1,7 @@
 # Build Status Report — OwnCo Co-Ownership Calculator
 
 **Date:** 2026-05-10  
-**Reporter:** Claude (session recovery — prior session ended abruptly after Phase 3 completion)
+**Reporter:** Claude (session 2 — UI refinements and results display improvements)
 
 ---
 
@@ -23,7 +23,7 @@
 ## Unit Test Results
 
 **Test runner:** Vitest 4.1.5  
-**Duration:** ~1.38s  
+**Duration:** ~1.45s  
 **Result:** 6 files, 34 tests — all pass
 
 ### Per-file breakdown
@@ -60,7 +60,7 @@
 - 1 of 4 lives in: that owner pays full FMR; 3 non-live-ins split proportionally (~$1,333/each on equal shares)
 - 2 of 4 live in: each pays half FMR ($2,000)
 - All 4 live in: each pays FMR/4; no receivers
-- Unequal ownership: non-live-in receivers get amounts proportional to their shares (B=60% of non-live-in pool → $1,800; C=40% → $1,200)
+- Unequal ownership: non-live-in receivers get amounts proportional to their shares
 
 **equity.test.ts (3 tests)**
 - Month 0 equity = total down payment (price minus loan)
@@ -111,30 +111,30 @@ All tasks complete. Accepted deviations (documented in prior BUILD_STATUS):
 ### Phase 2 — Calculator Engine ✅
 
 All 7 tasks complete. Files in `lib/calculator/`:
-- `types.ts` — Scenario, Owner, Occupancy, Results, OwnerResult, Comparison, ImputedRentBreakdown, AmortizationRow
+- `types.ts` — Scenario, Owner, Occupancy, Results, OwnerResult, Comparison, ImputedRentBreakdown, AmortizationRow. `Results` now includes `monthlyEquityGain`. `OwnerResult` now includes `monthlyEquityGainShare`, `netGainAtYear5`, `netGainAtYear10`, `netGainAtYear30`.
 - `mortgage.ts` — monthlyPayment, amortizationSchedule, balanceAtMonth, principalPaidThroughMonth
-- `perOwner.ts` — computeOwnershipShares, computeOwnerResults, totalMonthlyCarryingCost, loanPrincipal, externalRentalIncome
+- `perOwner.ts` — computeOwnershipShares, computeOwnerResults, totalMonthlyCarryingCost, loanPrincipal, externalRentalIncome. Now computes per-owner monthly equity gain (principal paydown + appreciation share) and net gain at 5/10/30 years (equity minus total cash invested).
 - `imputedRent.ts` — computeImputedRent
 - `equity.ts` — projectEquity, equityTimeSeries
 - `compare.ts` — computeComparisons
-- `compute.ts` — validateScenario, compute (top-level orchestrator)
+- `compute.ts` — validateScenario, compute (top-level orchestrator). Now computes `monthlyEquityGain` = month-1 principal paydown + monthly appreciation.
 - `scenario.ts` — encodeScenario, decodeScenario (URL-safe base64)
 - `defaults.ts` — DEFAULT_SCENARIO (4-owner, $750k, 7%, all live-in)
 
 ### Phase 3 — Calculator UI ✅
 
-All 5 tasks complete. Files in `components/calculator/`:
+All 5 tasks complete, with refinements applied in session 2. Files in `components/calculator/`:
 - `calculatorStore.ts` — Zustand store: scenario, setScenario, updateScenario
 - `CalculatorShell.tsx` — URL sync (reads `?s=` on mount, writes on change debounced 300ms), computes results via `useMemo`
 - `InputPanel.tsx` — four Card sections (Property, Mortgage, Owners, Occupancy)
 - `PropertyInputs.tsx` — purchasePrice, propertyTaxAnnual, insuranceAnnual, hoaMonthly, maintenanceReserveAnnualPct
 - `MortgageInputs.tsx` — mortgageRate (slider + input), mortgageTermYears (select: 15/20/30)
-- `OwnerInputs.tsx` — dynamic owner list (2–6), per-owner name/down/rent; add/remove buttons; updates occupancy live-in indices on owner removal
+- `OwnerInputs.tsx` — dynamic owner list (2–6), per-owner name/down payment/"Alt. Housing Cost" (formerly "Current Rent"); add/remove buttons; updates occupancy live-in indices on owner removal
 - `OccupancyInputs.tsx` — occupancy type select, conditional live-in checkboxes for owner_occupied/mixed, external rent input for rented_out/mixed
-- `ResultsPanel.tsx` — validation error state, combined savings headline, owner cards grid, imputed rent callout, charts, actions
-- `PerOwnerCard.tsx` — per-owner monthly cost, savings vs renting, ownership share, equity at 5/10/30 years
+- `ResultsPanel.tsx` — validation error state, "Monthly Summary" hero card (three columns: net vs. alt. housing | monthly equity gain | net gain/loss), owner cards grid, imputed rent callout, charts, actions
+- `PerOwnerCard.tsx` — net monthly cost headline; three-column monthly row (vs. alt. housing | equity gain | net gain/loss, colored green/red); three-column net gain row (5Y / 10Y / 30Y net gain = equity minus all cash invested)
 - `ImputedRentCallout.tsx` — plain-language explanation of imputed rent flow
-- `ComparisonChart.tsx` — Recharts BarChart, 3 bars per owner (buy solo / keep renting / co-buy)
+- `ComparisonChart.tsx` — Recharts BarChart, 3 bars per owner (Co-Buy | Alt. Housing | Solo (owner-occ.))
 - `EquityChart.tsx` — Recharts LineChart, equity over 30 years, one line per owner
 - `ScenarioActions.tsx` — Save/Share/PDF buttons (disabled stubs, tooltip "Coming soon")
 
@@ -169,21 +169,17 @@ Not yet built: MDX blog, landing page hero/content, sitemap.xml, robots.txt, per
 **Severity: Low (DB not yet wired)**  
 `pnpm db:generate` has not been run. `lib/db/migrations/` is empty. This is expected — no `DATABASE_URL` is set and the DB is deferred to Phase 4 deploy.
 
-### D5 — Large number of untracked/unstaged files
-**Severity: Low**  
-Phase 2 and Phase 3 work (all calculator components and tests) is present on disk but not committed. The last commit is `7c5f465 chore: rename app from Roundtable/CoOwn to OwnCo`. All subsequent work is unstaged. A `git add -A && git commit` is needed to bring the repo up to date.
-
-### D6 — No Playwright / E2E tests
+### D5 — No Playwright / E2E tests
 **Severity: Planned — not a defect**  
 Per the spec, Playwright is deferred to Phase 5. Calculator UI has not been tested end-to-end in a browser beyond manual verification. The dev server (`pnpm dev`) is the current manual test surface.
 
-### D7 — CALCULATOR_BUILD.md still references "CoOwn" branding
+### D6 — CALCULATOR_BUILD.md still references "CoOwn" branding
 **Severity: Cosmetic**  
 The build spec document still uses "CoOwn" in the Nav spec (Task 1.5). The codebase has been renamed to "OwnCo" as of commit `7c5f465`. The spec doc is for reference only and does not affect the build.
 
 ---
 
-## Resolved Issues (Previously Blocking)
+## Resolved Issues
 
 | Issue | Resolution |
 |---|---|
@@ -191,16 +187,14 @@ The build spec document still uses "CoOwn" in the Nav spec (Task 1.5). The codeb
 | `lib/utils/cn.ts` duplication | Deleted; all imports use `@/lib/utils` (shadcn-canonical) |
 | Tailwind 4 compatibility | Accepted; shadcn 4.7 requires it; all styles work correctly |
 | Toast → Sonner substitution | Accepted; sonner is the current shadcn recommendation |
+| Large number of unstaged files (D5 from session 1) | All Phase 1–3 work committed and pushed to origin/dev and origin/master |
 
 ---
 
 ## Suggested Next Steps
 
-### Option A — Commit Phase 2/3 work (immediate)
-Run `git add -A && git commit -m "task: phase 2+3 - calculator engine and UI"` to bring the repo current. Then proceed to Phase 4.
-
-### Option B — Bundle size audit before Phase 4
-Verify the `/calculator` route meets the 150 kB gzipped budget before adding more code. Add `dynamic()` lazy loading for the chart components. Then commit and proceed.
-
-### Option C — Phase 4 (recommended next phase)
+### Option A — Phase 4 (recommended next phase)
 Begin Task 4.1 (server actions), Task 4.2 (EmailGate dialog), Task 4.3 (shared scenario view). This is the lead-capture / viral loop phase and unlocks the core business value of the calculator.
+
+### Option B — Bundle size audit
+Verify the `/calculator` route meets the 150 kB gzipped budget before adding more code. Add `dynamic()` lazy loading for the chart components.

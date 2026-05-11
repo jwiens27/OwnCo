@@ -23,8 +23,8 @@ export function ComparisonChart({
   const data = comparisons.map((cmp, i) => ({
     name: ownerResults[i]?.name ?? `Owner ${i + 1}`,
     "Co-Buy": Math.round(cmp.coBuy.monthlyCost),
-    "Keep Renting": Math.round(cmp.keepRenting.monthlyCost),
-    "Buy Solo": cmp.buySolo.feasible && cmp.buySolo.monthlyCost != null
+    "Alt. Housing": Math.round(cmp.keepRenting.monthlyCost),
+    "Solo (owner-occ.)": cmp.buySolo.feasible && cmp.buySolo.monthlyCost != null
       ? Math.round(cmp.buySolo.monthlyCost)
       : null,
   }));
@@ -40,8 +40,8 @@ export function ComparisonChart({
           <Tooltip formatter={(v: number) => formatCurrency(v)} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar dataKey="Co-Buy" fill="#6366f1" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="Keep Renting" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="Buy Solo" fill="#10b981" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Alt. Housing" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="Solo (owner-occ.)" fill="#10b981" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

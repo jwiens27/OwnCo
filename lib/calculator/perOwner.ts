@@ -57,6 +57,11 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
   const imputed = computeImputedRent(scenario);
   const principal = loanPrincipal(scenario);
 
+  const monthlyInterest = principal * (scenario.mortgageRate / 12);
+  const monthlyEquityGainTotal =
+    (carrying.mortgage - monthlyInterest) +
+    (scenario.purchasePrice * scenario.expectedAppreciationPct) / 12;
+
   return scenario.owners.map((owner, i) => {
     const share = shares[i];
     const monthlyMortgageShare = carrying.mortgage * share;
@@ -84,9 +89,16 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
       monthlyImputedRentReceived +
       monthlyImputedRentPaid;
 
+    const monthlyEquityGainShare = monthlyEquityGainTotal * share;
+
     const equityAtYear5 = projectEquity(scenario, 60).perOwner[i].equity;
     const equityAtYear10 = projectEquity(scenario, 120).perOwner[i].equity;
     const equityAtYear30 = projectEquity(scenario, 360).perOwner[i].equity;
+
+    // net gain = equity built minus all cash invested (down payment + cumulative net monthly costs)
+    const netGainAtYear5 = equityAtYear5 - owner.downPayment - netMonthlyCost * 60;
+    const netGainAtYear10 = equityAtYear10 - owner.downPayment - netMonthlyCost * 120;
+    const netGainAtYear30 = equityAtYear30 - owner.downPayment - netMonthlyCost * 360;
 
     return {
       ownerIndex: i,
@@ -102,11 +114,15 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
       monthlyImputedRentReceived,
       grossMonthlyCost,
       netMonthlyCost,
+      monthlyEquityGainShare,
       currentMonthlyRent: owner.currentMonthlyRent,
       monthlySavingsVsRenting: owner.currentMonthlyRent - netMonthlyCost,
       equityAtYear5,
       equityAtYear10,
       equityAtYear30,
+      netGainAtYear5,
+      netGainAtYear10,
+      netGainAtYear30,
     };
   });
 }
