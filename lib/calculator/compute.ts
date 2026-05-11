@@ -1,5 +1,5 @@
 import type { Scenario, Results } from "./types";
-import { computeOwnerResults, totalMonthlyCarryingCost } from "./perOwner";
+import { computeOwnerResults, totalMonthlyCarryingCost, loanPrincipal } from "./perOwner";
 import { computeImputedRent } from "./imputedRent";
 import { computeComparisons } from "./compare";
 
@@ -36,6 +36,7 @@ export function compute(scenario: Scenario): Results {
     return {
       totalMonthlyMortgage: 0,
       totalMonthlyCarryingCost: 0,
+      monthlyEquityGain: 0,
       ownerResults: [],
       imputedRent: null,
       comparisons: [],
@@ -43,12 +44,19 @@ export function compute(scenario: Scenario): Results {
     };
   }
   const carrying = totalMonthlyCarryingCost(scenario);
+  const loan = loanPrincipal(scenario);
+  const monthlyInterest = loan * (scenario.mortgageRate / 12);
+  const monthlyPrincipal = carrying.mortgage - monthlyInterest;
+  const monthlyAppreciation = (scenario.purchasePrice * scenario.expectedAppreciationPct) / 12;
+  const monthlyEquityGain = monthlyPrincipal + monthlyAppreciation;
+
   const ownerResults = computeOwnerResults(scenario);
   const imputed = computeImputedRent(scenario);
   const comparisons = computeComparisons(scenario, ownerResults);
   return {
     totalMonthlyMortgage: carrying.mortgage,
     totalMonthlyCarryingCost: carrying.total,
+    monthlyEquityGain,
     ownerResults,
     imputedRent: imputed,
     comparisons,

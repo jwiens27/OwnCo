@@ -5,7 +5,8 @@ import type { OwnerResult } from "@/lib/calculator/types";
 import { formatCurrency, formatPercent } from "@/lib/utils/format";
 
 export function PerOwnerCard({ result }: { result: OwnerResult }) {
-  const savingsPositive = result.monthlySavingsVsRenting >= 0;
+  const netGainLoss = result.monthlySavingsVsRenting + result.monthlyEquityGainShare;
+  const netPositive = netGainLoss >= 0;
 
   return (
     <Card>
@@ -20,25 +21,40 @@ export function PerOwnerCard({ result }: { result: OwnerResult }) {
           <span className="text-muted-foreground">Net monthly cost</span>
           <span className="font-medium">{formatCurrency(result.netMonthlyCost)}/mo</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">vs. renting</span>
-          <span className={savingsPositive ? "font-medium text-green-500" : "font-medium text-red-500"}>
-            {savingsPositive ? "saves " : "costs "}
-            {formatCurrency(Math.abs(result.monthlySavingsVsRenting))}/mo
-          </span>
-        </div>
+
         <div className="mt-1 border-t pt-2 grid grid-cols-3 gap-1 text-xs">
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">Yr 5</span>
-            <span className="font-medium">{formatCurrency(result.equityAtYear5)}</span>
+            <span className="text-muted-foreground">vs. alt. housing</span>
+            <span className="font-medium">
+              {result.monthlySavingsVsRenting >= 0 ? "+" : ""}
+              {formatCurrency(result.monthlySavingsVsRenting)}/mo
+            </span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">Yr 10</span>
-            <span className="font-medium">{formatCurrency(result.equityAtYear10)}</span>
+            <span className="text-muted-foreground">equity gain</span>
+            <span className="font-medium">+{formatCurrency(result.monthlyEquityGainShare)}/mo</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">Yr 30</span>
-            <span className="font-medium">{formatCurrency(result.equityAtYear30)}</span>
+            <span className="text-muted-foreground">net gain/loss</span>
+            <span className={`font-medium ${netPositive ? "text-green-500" : "text-red-500"}`}>
+              {netPositive ? "+" : ""}
+              {formatCurrency(netGainLoss)}/mo
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-1 border-t pt-2 grid grid-cols-3 gap-1 text-xs">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground">5Y net gain</span>
+            <span className="font-medium">{formatCurrency(result.netGainAtYear5)}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground">10Y net gain</span>
+            <span className="font-medium">{formatCurrency(result.netGainAtYear10)}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground">30Y net gain</span>
+            <span className="font-medium">{formatCurrency(result.netGainAtYear30)}</span>
           </div>
         </div>
       </CardContent>

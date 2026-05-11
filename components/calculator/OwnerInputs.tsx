@@ -80,7 +80,7 @@ export function OwnerInputs() {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Current Rent</Label>
+              <Label className="text-xs text-muted-foreground">Alt. Housing Cost</Label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted-foreground">$</span>
                 <Input
