@@ -1,10 +1,106 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCalculatorStore } from "./calculatorStore";
-import type { Occupancy } from "@/lib/calculator/types";
+import type { Owner, Occupancy } from "@/lib/calculator/types";
+
+function OwnerRow({
+  owner,
+  index,
+  canRemove,
+  onUpdate,
+  onRemove,
+}: {
+  owner: Owner;
+  index: number;
+  canRemove: boolean;
+  onUpdate: (field: "name" | "downPayment" | "currentMonthlyRent", value: string | number) => void;
+  onRemove: () => void;
+}) {
+  const [rawDown, setRawDown] = useState(String(owner.downPayment));
+  const [rawRent, setRawRent] = useState(String(owner.currentMonthlyRent));
+  const downFocused = useRef(false);
+  const rentFocused = useRef(false);
+
+  useEffect(() => {
+    if (!downFocused.current) setRawDown(String(owner.downPayment));
+  }, [owner.downPayment]);
+
+  useEffect(() => {
+    if (!rentFocused.current) setRawRent(String(owner.currentMonthlyRent));
+  }, [owner.currentMonthlyRent]);
+
+  return (
+    <div className="rounded-md border p-3 flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <Input
+          value={owner.name}
+          onChange={(e) => onUpdate("name", e.target.value)}
+          placeholder={`Owner ${index + 1}`}
+          className="min-h-[44px] font-medium"
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={!canRemove}
+          onClick={onRemove}
+          className="min-h-[44px] min-w-[44px] shrink-0"
+        >
+          ✕
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Down Payment</Label>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground">$</span>
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={rawDown}
+              onFocus={() => { downFocused.current = true; }}
+              onBlur={() => {
+                downFocused.current = false;
+                if (isNaN(parseFloat(rawDown))) setRawDown(String(owner.downPayment));
+              }}
+              onChange={(e) => {
+                setRawDown(e.target.value);
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v)) onUpdate("downPayment", v);
+              }}
+              className="min-h-[44px]"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Alt. Housing Cost</Label>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground">$</span>
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={rawRent}
+              onFocus={() => { rentFocused.current = true; }}
+              onBlur={() => {
+                rentFocused.current = false;
+                if (isNaN(parseFloat(rawRent))) setRawRent(String(owner.currentMonthlyRent));
+              }}
+              onChange={(e) => {
+                setRawRent(e.target.value);
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v)) onUpdate("currentMonthlyRent", v);
+              }}
+              className="min-h-[44px]"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function OwnerInputs() {
   const { scenario, updateScenario } = useCalculatorStore();
@@ -43,61 +139,14 @@ export function OwnerInputs() {
   return (
     <div className="flex flex-col gap-4">
       {owners.map((owner, i) => (
-        <div key={i} className="rounded-md border p-3 flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-2">
-            <Input
-              value={owner.name}
-              onChange={(e) => updateOwner(i, "name", e.target.value)}
-              placeholder={`Owner ${i + 1}`}
-              className="min-h-[44px] font-medium"
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={owners.length <= 2}
-              onClick={() => removeOwner(i)}
-              className="min-h-[44px] min-w-[44px] shrink-0"
-            >
-              ✕
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Down Payment</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={owner.downPayment}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    if (!isNaN(v)) updateOwner(i, "downPayment", v);
-                  }}
-                  className="min-h-[44px]"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Alt. Housing Cost</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-sm text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step={50}
-                  value={owner.currentMonthlyRent}
-                  onChange={(e) => {
-                    const v = parseFloat(e.target.value);
-                    if (!isNaN(v)) updateOwner(i, "currentMonthlyRent", v);
-                  }}
-                  className="min-h-[44px]"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <OwnerRow
+          key={i}
+          owner={owner}
+          index={i}
+          canRemove={owners.length > 2}
+          onUpdate={(field, value) => updateOwner(i, field, value)}
+          onRemove={() => removeOwner(i)}
+        />
       ))}
       <Button
         variant="outline"
