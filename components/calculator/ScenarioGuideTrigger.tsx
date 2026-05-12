@@ -7,9 +7,9 @@ import { SCENARIO_PRESETS, type GuideId } from "@/lib/calculator/presets";
 import { DEFAULT_SCENARIO } from "@/lib/calculator/defaults";
 import { ScenarioGuideDialog } from "./ScenarioGuideDialog";
 import { ScenarioGuidePanel } from "./ScenarioGuidePanel";
+import type { Scenario } from "@/lib/calculator/types";
 
-// sentinel to detect if scenario has been modified from defaults
-function isDefault(scenario: ReturnType<typeof useCalculatorStore>["scenario"]) {
+function isDefault(scenario: Scenario) {
   return JSON.stringify(scenario) === JSON.stringify(DEFAULT_SCENARIO);
 }
 
