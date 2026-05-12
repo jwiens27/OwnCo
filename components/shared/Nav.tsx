@@ -5,8 +5,9 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          OwnCo
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/logo/ownco-logo.svg" alt="" aria-hidden="true" className="h-8 w-8 rounded-sm" />
+          <span className="text-lg font-semibold tracking-tight">OwnCo</span>
         </Link>
         <nav className="flex items-center gap-6">
           <Link href="/calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

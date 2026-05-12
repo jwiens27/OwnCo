@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-labelledby="title desc">
+  <title id="title">OwnCo logo</title>
+  <desc id="desc">Minimal OwnCo logo on a black background with a white wordmark and a slightly detached purple accent quadrant.</desc>
+
+  <rect width="1254" height="1254" fill="#000000"/>
+
+  <!-- Shared ownership mark -->
+  <g transform="translate(248 627)">
+    <!-- Main pie body: all but the top-right quadrant -->
+    <path d="M 0 0 L 0 -126 A 126 126 0 1 0 126 0 Z" fill="#FFFFFF"/>
+
+    <!-- Detached purple ownership segment -->
+    <path d="M 18 -18 L 18 -144 A 126 126 0 0 1 144 -18 Z" fill="#6442FF"/>
+
+    <!-- Segment dividers, matching the black background -->
+    <rect x="-142" y="-13" width="284" height="26" fill="#000000"/>
+    <rect x="-13" y="-142" width="26" height="284" fill="#000000"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="445" y="682"
+        fill="#FFFFFF"
+        font-family="Inter, SF Pro Display, Avenir Next, Avenir, Helvetica Neue, Arial, sans-serif"
+        font-size="160"
+        font-weight="700"
+        letter-spacing="-7">OwnCo</text>
+</svg>
