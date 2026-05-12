@@ -5,10 +5,12 @@ import { PropertyInputs } from "./PropertyInputs";
 import { MortgageInputs } from "./MortgageInputs";
 import { OwnerInputs } from "./OwnerInputs";
 import { OccupancyInputs } from "./OccupancyInputs";
+import { AcquisitionModeToggle } from "./AcquisitionModeToggle";
 
 export function InputPanel() {
   return (
     <div className="flex flex-col gap-4">
+      <AcquisitionModeToggle />
       <Card>
         <CardHeader>
           <CardTitle>Property</CardTitle>

@@ -10,24 +10,33 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import type { Comparison, OwnerResult } from "@/lib/calculator/types";
+import type { Comparison, OwnerResult, AcquisitionMode } from "@/lib/calculator/types";
 import { formatCurrency } from "@/lib/utils/format";
 
 export function ComparisonChart({
   comparisons,
   ownerResults,
+  mode,
 }: {
   comparisons: Comparison[];
   ownerResults: OwnerResult[];
+  mode: AcquisitionMode;
 }) {
-  const data = comparisons.map((cmp, i) => ({
-    name: ownerResults[i]?.name ?? `Owner ${i + 1}`,
-    "Co-Buy": Math.round(cmp.coBuy.monthlyCost),
-    "Alt. Housing": Math.round(cmp.keepRenting.monthlyCost),
-    "Solo (owner-occ.)": cmp.buySolo.feasible && cmp.buySolo.monthlyCost != null
-      ? Math.round(cmp.buySolo.monthlyCost)
-      : null,
-  }));
+  const soloLabel = mode === "inheritance" ? "Buy out heirs" : "Solo (owner-occ.)";
+  const showAltHousing = ownerResults.some((r) => r.currentMonthlyRent > 0);
+  const showSolo = mode === "purchase" || ownerResults.some((r) => r.currentMonthlyRent > 0);
+
+  const data = comparisons.map((cmp, i) => {
+    const owner = ownerResults[i];
+    return {
+      name: owner?.name ?? `Owner ${i + 1}`,
+      "Co-Buy": Math.round(cmp.coBuy.monthlyCost),
+      ...(showAltHousing && { "Alt. Housing": Math.round(cmp.keepRenting.monthlyCost) }),
+      ...(showSolo && cmp.buySolo.feasible && cmp.buySolo.monthlyCost != null
+        ? { [soloLabel]: Math.round(cmp.buySolo.monthlyCost) }
+        : {}),
+    };
+  });
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -40,8 +49,12 @@ export function ComparisonChart({
           <Tooltip formatter={(v: number) => formatCurrency(v)} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar dataKey="Co-Buy" fill="#6366f1" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="Alt. Housing" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="Solo (owner-occ.)" fill="#10b981" radius={[3, 3, 0, 0]} />
+          {showAltHousing && (
+            <Bar dataKey="Alt. Housing" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+          )}
+          {showSolo && (
+            <Bar dataKey={soloLabel} fill="#10b981" radius={[3, 3, 0, 0]} />
+          )}
         </BarChart>
       </ResponsiveContainer>
     </div>

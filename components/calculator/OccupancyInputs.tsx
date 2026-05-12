@@ -11,11 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCalculatorStore } from "./calculatorStore";
+import { FieldTooltip } from "./FieldTooltip";
+import { FIELD_LABELS, TOOLTIP_COPY } from "@/lib/calculator/modes";
 import type { Occupancy } from "@/lib/calculator/types";
 
 export function OccupancyInputs() {
   const { scenario, updateScenario } = useCalculatorStore();
-  const { occupancy, owners } = scenario;
+  const { occupancy, owners, acquisitionMode } = scenario;
+  const labels = FIELD_LABELS[acquisitionMode];
+  const tips = TOOLTIP_COPY[acquisitionMode];
 
   const rentedOutValue = occupancy.type === "rented_out" ? occupancy.expectedMonthlyRent : 0;
   const fmrValue = (occupancy.type === "owner_occupied" || occupancy.type === "mixed") ? occupancy.fairMarketRent : 0;
@@ -72,7 +76,10 @@ export function OccupancyInputs() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label className="text-sm">Occupancy Type</Label>
+        <Label className="text-sm flex items-center">
+          {labels.occupancyType}
+          <FieldTooltip>{tips.occupancyType}</FieldTooltip>
+        </Label>
         <Select value={occupancy.type} onValueChange={handleTypeChange}>
           <SelectTrigger className="min-h-[44px]">
             <SelectValue />
@@ -87,7 +94,10 @@ export function OccupancyInputs() {
 
       {occupancy.type === "rented_out" && (
         <div className="flex flex-col gap-1.5">
-          <Label className="text-sm">Expected Monthly Rent</Label>
+          <Label className="text-sm flex items-center">
+            {labels.expectedMonthlyRent}
+            <FieldTooltip>{tips.expectedMonthlyRent}</FieldTooltip>
+          </Label>
           <div className="flex items-center gap-1">
             <span className="text-sm text-muted-foreground">$</span>
             <Input
@@ -113,7 +123,10 @@ export function OccupancyInputs() {
       {(occupancy.type === "owner_occupied" || occupancy.type === "mixed") && (
         <>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-sm">Fair Market Rent (comparable unit)</Label>
+            <Label className="text-sm flex items-center">
+              {labels.fairMarketRent}
+              <FieldTooltip>{tips.fairMarketRent}</FieldTooltip>
+            </Label>
             <div className="flex items-center gap-1">
               <span className="text-sm text-muted-foreground">$</span>
               <Input
@@ -137,7 +150,10 @@ export function OccupancyInputs() {
 
           {occupancy.type === "mixed" && (
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm">External Rental Income (monthly)</Label>
+              <Label className="text-sm flex items-center">
+                {labels.externalMonthlyRent}
+                <FieldTooltip>{tips.externalMonthlyRent}</FieldTooltip>
+              </Label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted-foreground">$</span>
                 <Input
@@ -161,7 +177,10 @@ export function OccupancyInputs() {
           )}
 
           <div className="flex flex-col gap-2">
-            <Label className="text-sm">Live-in Owners</Label>
+            <Label className="text-sm flex items-center">
+              {labels.liveInOwnerIndices}
+              <FieldTooltip>{tips.liveInOwnerIndices}</FieldTooltip>
+            </Label>
             {owners.map((owner, i) => (
               <label
                 key={i}

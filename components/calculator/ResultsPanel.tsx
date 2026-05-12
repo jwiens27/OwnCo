@@ -1,6 +1,7 @@
 "use client";
 
-import type { Results } from "@/lib/calculator/types";
+import { useState } from "react";
+import type { Results, AcquisitionMode } from "@/lib/calculator/types";
 import { PerOwnerCard } from "./PerOwnerCard";
 import { ImputedRentCallout } from "./ImputedRentCallout";
 import { ComparisonChart } from "./ComparisonChart";
@@ -8,7 +9,17 @@ import { EquityChart } from "./EquityChart";
 import { ScenarioActions } from "./ScenarioActions";
 import { formatCurrency } from "@/lib/utils/format";
 
-export function ResultsPanel({ results }: { results: Results }) {
+export function ResultsPanel({
+  results,
+  mode,
+  isDefaultScenario = false,
+}: {
+  results: Results;
+  mode: AcquisitionMode;
+  isDefaultScenario?: boolean;
+}) {
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
   if (results.validationErrors.length > 0) {
     return (
       <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-4">
@@ -32,6 +43,31 @@ export function ResultsPanel({ results }: { results: Results }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {isDefaultScenario && !bannerDismissed && (
+        <div className="flex items-center justify-between rounded-md border bg-muted/50 px-4 py-3 text-sm">
+          <span>
+            New to OwnCo?{" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-foreground"
+              onClick={() => {
+                const el = document.querySelector("[data-guides-trigger]");
+                if (el instanceof HTMLElement) el.click();
+              }}
+            >
+              Browse scenario guides →
+            </button>
+          </span>
+          <button
+            type="button"
+            onClick={() => setBannerDismissed(true)}
+            className="ml-4 text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className="rounded-lg border bg-card p-6">
         <p className="mb-4 text-sm font-semibold">Monthly Summary</p>
         <div className="grid grid-cols-3 gap-4">
@@ -64,7 +100,7 @@ export function ResultsPanel({ results }: { results: Results }) {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {results.ownerResults.map((r) => (
-          <PerOwnerCard key={r.ownerIndex} result={r} />
+          <PerOwnerCard key={r.ownerIndex} result={r} mode={mode} />
         ))}
       </div>
 
@@ -75,7 +111,11 @@ export function ResultsPanel({ results }: { results: Results }) {
         />
       )}
 
-      <ComparisonChart comparisons={results.comparisons} ownerResults={results.ownerResults} />
+      <ComparisonChart
+        comparisons={results.comparisons}
+        ownerResults={results.ownerResults}
+        mode={mode}
+      />
       <EquityChart ownerResults={results.ownerResults} />
 
       <ScenarioActions />

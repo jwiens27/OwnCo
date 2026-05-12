@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ScenarioGuideTrigger } from "./ScenarioGuideTrigger";
 
 function DisabledButton({ label }: { label: string }) {
   return (
@@ -25,6 +26,7 @@ export function ScenarioActions() {
   return (
     <TooltipProvider>
       <div className="flex flex-wrap gap-2">
+        <ScenarioGuideTrigger />
         <DisabledButton label="Save" />
         <DisabledButton label="Share" />
         <DisabledButton label="PDF" />
