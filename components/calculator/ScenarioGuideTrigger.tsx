@@ -41,7 +41,7 @@ export function ScenarioGuideTrigger() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setDialogOpen(true)}>
+      <Button variant="outline" size="sm" data-guides-trigger onClick={() => setDialogOpen(true)}>
         Guides
       </Button>
 
