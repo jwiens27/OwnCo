@@ -1,12 +1,20 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { OwnerResult } from "@/lib/calculator/types";
+import type { OwnerResult, AcquisitionMode } from "@/lib/calculator/types";
 import { formatCurrency, formatPercent } from "@/lib/utils/format";
 
-export function PerOwnerCard({ result }: { result: OwnerResult }) {
+export function PerOwnerCard({
+  result,
+  mode,
+}: {
+  result: OwnerResult;
+  mode: AcquisitionMode;
+}) {
   const netGainLoss = result.monthlyEquityGainShare - result.netMonthlyCost;
   const netPositive = netGainLoss >= 0;
+
+  const yearLabel = mode === "inheritance" ? "Appreciation gain" : "Net gain";
 
   return (
     <Card>
@@ -38,15 +46,15 @@ export function PerOwnerCard({ result }: { result: OwnerResult }) {
 
         <div className="mt-1 border-t pt-2 grid grid-cols-3 gap-1 text-xs">
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">5Y net gain</span>
+            <span className="text-muted-foreground">{yearLabel} Y5</span>
             <span className="font-medium">{formatCurrency(result.netGainAtYear5)}</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">10Y net gain</span>
+            <span className="text-muted-foreground">{yearLabel} Y10</span>
             <span className="font-medium">{formatCurrency(result.netGainAtYear10)}</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-muted-foreground">30Y net gain</span>
+            <span className="text-muted-foreground">{yearLabel} Y30</span>
             <span className="font-medium">{formatCurrency(result.netGainAtYear30)}</span>
           </div>
         </div>

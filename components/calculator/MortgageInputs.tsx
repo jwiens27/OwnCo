@@ -12,9 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCalculatorStore } from "./calculatorStore";
+import { FieldTooltip } from "./FieldTooltip";
+import { FIELD_LABELS, TOOLTIP_COPY } from "@/lib/calculator/modes";
 
 export function MortgageInputs() {
   const { scenario, updateScenario } = useCalculatorStore();
+  const mode = scenario.acquisitionMode;
+  const labels = FIELD_LABELS[mode];
+  const tips = TOOLTIP_COPY[mode];
+
   const ratePercent = parseFloat((scenario.mortgageRate * 100).toFixed(3));
   const [rawRate, setRawRate] = useState(String(ratePercent));
   const rateFocused = useRef(false);
@@ -26,7 +32,10 @@ export function MortgageInputs() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label className="text-sm">Interest Rate</Label>
+        <Label className="text-sm flex items-center">
+          {labels.mortgageRate}
+          <FieldTooltip>{tips.mortgageRate}</FieldTooltip>
+        </Label>
         <div className="flex items-center gap-3">
           <Slider
             min={0}
@@ -64,7 +73,10 @@ export function MortgageInputs() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-sm">Loan Term</Label>
+        <Label className="text-sm flex items-center">
+          {labels.mortgageTermYears}
+          <FieldTooltip>{tips.mortgageTermYears}</FieldTooltip>
+        </Label>
         <Select
           value={String(scenario.mortgageTermYears)}
           onValueChange={(v) => { if (v !== null) updateScenario({ mortgageTermYears: parseInt(v) }); }}

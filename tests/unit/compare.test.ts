@@ -4,6 +4,7 @@ import { computeOwnerResults } from "@/lib/calculator/perOwner";
 import type { Scenario } from "@/lib/calculator/types";
 
 const scenario: Scenario = {
+  acquisitionMode: "purchase",
   purchasePrice: 800000,
   propertyTaxAnnual: 9600,
   insuranceAnnual: 1800,

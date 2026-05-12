@@ -1,6 +1,7 @@
 import type { Scenario } from "./types";
 
 export const DEFAULT_SCENARIO: Scenario = {
+  acquisitionMode: "purchase",
   purchasePrice: 750000,
   propertyTaxAnnual: 9000,
   insuranceAnnual: 1800,

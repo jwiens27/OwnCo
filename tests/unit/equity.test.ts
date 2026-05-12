@@ -3,6 +3,7 @@ import { projectEquity } from "@/lib/calculator/equity";
 import type { Scenario } from "@/lib/calculator/types";
 
 const scenario: Scenario = {
+  acquisitionMode: "purchase",
   purchasePrice: 600000,
   propertyTaxAnnual: 7200,
   insuranceAnnual: 1500,

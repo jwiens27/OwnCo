@@ -15,7 +15,9 @@ export function decodeScenario(encoded: string): Scenario | null {
       typeof window !== "undefined"
         ? decodeURIComponent(escape(window.atob(padded)))
         : Buffer.from(padded, "base64").toString("utf-8");
-    return JSON.parse(json) as Scenario;
+    const parsed = JSON.parse(json);
+    if (!parsed.acquisitionMode) parsed.acquisitionMode = "purchase";
+    return parsed as Scenario;
   } catch {
     return null;
   }

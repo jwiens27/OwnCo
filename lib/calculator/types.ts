@@ -1,3 +1,5 @@
+export type AcquisitionMode = "purchase" | "inheritance";
+
 export type Owner = {
   name: string;
   downPayment: number;
@@ -25,6 +27,7 @@ export type MixedOccupancy = {
 export type Occupancy = RentedOutOccupancy | OwnerOccupiedOccupancy | MixedOccupancy;
 
 export type Scenario = {
+  acquisitionMode: AcquisitionMode;
   purchasePrice: number;
   propertyTaxAnnual: number;
   insuranceAnnual: number;
@@ -70,10 +73,15 @@ export type OwnerResult = {
 };
 
 export type ImputedRentBreakdown = {
-  fairMarketRent: number;
-  totalImputedRentPaidByLiveInOwners: number;
-  perLiveInOwnerOwed: { ownerIndex: number; amount: number }[];
-  perNonLiveInOwnerReceived: { ownerIndex: number; amount: number }[];
+  totalFmr: number;
+  liveInCount: number;
+  perOwner: Array<{
+    ownerIndex: number;
+    isLiveIn: boolean;
+    monthlyPaid: number;      // FMR/k if live-in, 0 otherwise
+    monthlyReceived: number;  // FMR × share for every owner
+    monthlyNet: number;       // received − paid (negative = net payer)
+  }>;
 };
 
 export type Comparison = {

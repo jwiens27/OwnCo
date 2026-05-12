@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useCalculatorStore } from "./calculatorStore";
 import { decodeScenario, encodeScenario } from "@/lib/calculator/scenario";
 import { compute } from "@/lib/calculator/compute";
+import { DEFAULT_SCENARIO } from "@/lib/calculator/defaults";
 import { InputPanel } from "./InputPanel";
 import { ResultsPanel } from "./ResultsPanel";
 
@@ -36,11 +37,19 @@ export function CalculatorShell({ searchParamsPromise }: Props) {
   }, [scenario, router, pathname]);
 
   const results = useMemo(() => compute(scenario), [scenario]);
+  const isDefaultScenario = useMemo(
+    () => JSON.stringify(scenario) === JSON.stringify(DEFAULT_SCENARIO),
+    [scenario],
+  );
 
   return (
     <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[40fr_60fr]">
       <InputPanel />
-      <ResultsPanel results={results} />
+      <ResultsPanel
+        results={results}
+        mode={scenario.acquisitionMode}
+        isDefaultScenario={isDefaultScenario}
+      />
     </div>
   );
 }

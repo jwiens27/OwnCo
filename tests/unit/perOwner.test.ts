@@ -8,6 +8,7 @@ import {
 import type { Scenario } from "@/lib/calculator/types";
 
 const baseScenario: Scenario = {
+  acquisitionMode: "purchase",
   purchasePrice: 800000,
   propertyTaxAnnual: 9600,
   insuranceAnnual: 1800,
@@ -84,6 +85,44 @@ describe("computeOwnerResults", () => {
       expect(r.equityAtYear30).toBeGreaterThan(r.equityAtYear10);
       expect(r.equityAtYear10).toBeGreaterThan(r.equityAtYear5);
     });
+  });
+});
+
+describe("Guide 3 fixture — inheritance, one sibling lives in", () => {
+  const guide3: Scenario = {
+    acquisitionMode: "inheritance",
+    purchasePrice: 600_000,
+    propertyTaxAnnual: 7_200,
+    insuranceAnnual: 1_800,
+    hoaMonthly: 0,
+    maintenanceReserveAnnualPct: 0.01,
+    expectedAppreciationPct: 0.03,
+    mortgageRate: 0,
+    mortgageTermYears: 30,
+    owners: [
+      { name: "Live-in sibling", downPayment: 200_000, currentMonthlyRent: 0 },
+      { name: "Sibling 2", downPayment: 200_000, currentMonthlyRent: 0 },
+      { name: "Sibling 3", downPayment: 200_000, currentMonthlyRent: 0 },
+    ],
+    occupancy: { type: "owner_occupied", liveInOwnerIndices: [0], fairMarketRent: 3_200 },
+  };
+
+  it("live-in net monthly cost ≈ $2,550 (not $3,616.67)", () => {
+    const results = computeOwnerResults(guide3);
+    expect(results[0].netMonthlyCost).toBeCloseTo(2550, 0);
+  });
+
+  it("non-live-in siblings each collect ≈ $650/mo (negative net cost)", () => {
+    const results = computeOwnerResults(guide3);
+    expect(results[1].netMonthlyCost).toBeCloseTo(-650, 0);
+    expect(results[2].netMonthlyCost).toBeCloseTo(-650, 0);
+  });
+
+  it("conservation: sum of net costs equals total carrying cost", () => {
+    const results = computeOwnerResults(guide3);
+    const carrying = totalMonthlyCarryingCost(guide3);
+    const sumNet = results.reduce((s, r) => s + r.netMonthlyCost, 0);
+    expect(sumNet).toBeCloseTo(carrying.total, 1);
   });
 });
 

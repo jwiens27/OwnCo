@@ -71,10 +71,9 @@ export function computeOwnerResults(scenario: Scenario): OwnerResult[] {
     const monthlyMaintenanceShare = carrying.maintenance * share;
     const monthlyRentalIncomeShare = rentalIncome * share;
 
-    const paidEntry = imputed?.perLiveInOwnerOwed.find((e) => e.ownerIndex === i);
-    const receivedEntry = imputed?.perNonLiveInOwnerReceived.find((e) => e.ownerIndex === i);
-    const monthlyImputedRentPaid = paidEntry?.amount ?? 0;
-    const monthlyImputedRentReceived = receivedEntry?.amount ?? 0;
+    const ownerImputed = imputed?.perOwner.find((e) => e.ownerIndex === i);
+    const monthlyImputedRentPaid = ownerImputed?.monthlyPaid ?? 0;
+    const monthlyImputedRentReceived = ownerImputed?.monthlyReceived ?? 0;
 
     const grossMonthlyCost =
       monthlyMortgageShare +

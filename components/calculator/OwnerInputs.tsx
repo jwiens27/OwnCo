@@ -5,23 +5,29 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCalculatorStore } from "./calculatorStore";
-import type { Owner, Occupancy } from "@/lib/calculator/types";
+import { FieldTooltip } from "./FieldTooltip";
+import { FIELD_LABELS, TOOLTIP_COPY } from "@/lib/calculator/modes";
+import type { Owner, Occupancy, AcquisitionMode } from "@/lib/calculator/types";
 
 function OwnerRow({
   owner,
   index,
   canRemove,
+  mode,
   onUpdate,
   onRemove,
 }: {
   owner: Owner;
   index: number;
   canRemove: boolean;
+  mode: AcquisitionMode;
   onUpdate: (field: "name" | "downPayment", value: string | number) => void;
   onRemove: () => void;
 }) {
   const [rawDown, setRawDown] = useState(String(owner.downPayment));
   const downFocused = useRef(false);
+  const labels = FIELD_LABELS[mode];
+  const tips = TOOLTIP_COPY[mode];
 
   useEffect(() => {
     if (!downFocused.current) setRawDown(String(owner.downPayment));
@@ -47,7 +53,10 @@ function OwnerRow({
         </Button>
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">Down Payment</Label>
+        <Label className="text-xs text-muted-foreground flex items-center">
+          {labels.ownerDownPayment}
+          <FieldTooltip>{tips.ownerDownPayment}</FieldTooltip>
+        </Label>
         <div className="flex items-center gap-1">
           <span className="text-sm text-muted-foreground">$</span>
           <Input
@@ -74,7 +83,7 @@ function OwnerRow({
 
 export function OwnerInputs() {
   const { scenario, updateScenario } = useCalculatorStore();
-  const { owners, occupancy } = scenario;
+  const { owners, occupancy, acquisitionMode } = scenario;
 
   function addOwner() {
     if (owners.length >= 6) return;
@@ -114,6 +123,7 @@ export function OwnerInputs() {
           owner={owner}
           index={i}
           canRemove={owners.length > 2}
+          mode={acquisitionMode}
           onUpdate={(field, value) => updateOwner(i, field, value)}
           onRemove={() => removeOwner(i)}
         />
