@@ -55,7 +55,7 @@ export function ResultsPanel({
                 if (el instanceof HTMLElement) el.click();
               }}
             >
-              Browse guides →
+              Browse scenario guides →
             </button>
           </span>
           <button
